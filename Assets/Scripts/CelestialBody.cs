@@ -19,6 +19,7 @@ public class CelestialBody : MonoBehaviour
         MeshRenderer mr = GetComponent<MeshRenderer>();
         mr.material = new Material(templateMaterial);
         mr.material.color = color;
+
     }
 
     Mesh GenerateMesh()
