@@ -2,38 +2,32 @@ using UnityEngine;
 
 public class NoiseFilter
 {
-    private float strength;
-    private float baseRoughness;
-    private int numLayers;
-    private float persistence;
-    private Vector3 center;
+    private NoiseLayer settings;
 
-    public NoiseFilter(float strength, float baseRoughness, int numLayers, float persistence, Vector3 center)
+    public NoiseFilter(NoiseLayer settings)
     {
-        this.strength = strength;
-        this.baseRoughness = baseRoughness;
-        this.numLayers = numLayers;
-        this.persistence = persistence;
-        this.center = center;
+        this.settings = settings;
     }
 
     public float Evaluate(Vector3 point)
     {
         float noiseValue = 0f;
-        float frequency = baseRoughness;
+        float frequency = settings.baseRoughness;
         float amplitude = 1f;
 
-        for (int i = 0; i < numLayers; i++)
+        for (int i = 0; i < settings.numLayers; i++)
         {
-            // Use 3D Perlin noise approximation by sampling multiple 2D noises
-            float v = Mathf.PerlinNoise(point.x * frequency + center.x, point.y * frequency + center.y);
-            noiseValue += v * amplitude;
+            float v = Mathf.PerlinNoise(
+                point.x * frequency + settings.center.x,
+                point.y * frequency + settings.center.y
+            );
 
+            noiseValue += v * amplitude;
             frequency *= 2f;
-            amplitude *= persistence;
+            amplitude *= settings.persistence;
         }
 
-        noiseValue = noiseValue * strength;
-        return noiseValue;
+        noiseValue = Mathf.Max(0, noiseValue - settings.minValue);
+        return noiseValue * settings.strength;
     }
 }

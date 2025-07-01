@@ -1,11 +1,9 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class CelestialBody : MonoBehaviour
 {
-    public float radius = 1f;
-    public int resolution = 10; // Number of vertices per face edge
+    public ShapeSettings shapeSettings;
     public Material templateMaterial;
     public Color color = Color.white;
 
@@ -13,8 +11,7 @@ public class CelestialBody : MonoBehaviour
 
     void Start()
     {
-        var noiseFilter = new NoiseFilter(strength: 0.5f, baseRoughness: 1f, numLayers: 4, persistence: 0.5f, center: Vector3.zero);
-        shapeGenerator = new ShapeGenerator(noiseFilter);
+        shapeGenerator = new ShapeGenerator(shapeSettings);
 
         MeshFilter mf = GetComponent<MeshFilter>();
         mf.mesh = GenerateMesh();
@@ -26,28 +23,23 @@ public class CelestialBody : MonoBehaviour
 
     Mesh GenerateMesh()
     {
+        int resolution = shapeSettings.meshResolution;
         Mesh mesh = new Mesh();
-
-        List<Vector3> vertices = new List<Vector3>();
+        List<UnityEngine.Vector3> vertices = new List<UnityEngine.Vector3>();
         List<int> triangles = new List<int>();
 
-        // Create a cube and then normalize vertices to form a sphere (cube-sphere technique)
-
-        // 6 faces of cube: up, down, left, right, forward, back
-        Vector3[] directions = {
-            Vector3.up,
-            Vector3.down,
-            Vector3.left,
-            Vector3.right,
-            Vector3.forward,
-            Vector3.back
+        UnityEngine.Vector3[] directions = {
+            UnityEngine.Vector3.up,
+            UnityEngine.Vector3.down,
+            UnityEngine.Vector3.left,
+            UnityEngine.Vector3.right,
+            UnityEngine.Vector3.forward,
+            UnityEngine.Vector3.back
         };
-
-        int faceResolution = resolution;
 
         for (int i = 0; i < 6; i++)
         {
-            ConstructFace(directions[i], vertices, triangles, faceResolution);
+            ConstructFace(directions[i], vertices, triangles, resolution);
         }
 
         mesh.SetVertices(vertices);
@@ -57,28 +49,26 @@ public class CelestialBody : MonoBehaviour
         return mesh;
     }
 
-    void ConstructFace(Vector3 localUp, List<Vector3> vertices, List<int> triangles, int resolution)
+    void ConstructFace(UnityEngine.Vector3 localUp, List<UnityEngine.Vector3> vertices, List<int> triangles, int resolution)
     {
-        Vector3 axisA = new Vector3(localUp.y, localUp.z, localUp.x);
-        Vector3 axisB = Vector3.Cross(localUp, axisA);
-
+        UnityEngine.Vector3 axisA = new UnityEngine.Vector3(localUp.y, localUp.z, localUp.x);
+        UnityEngine.Vector3 axisB = UnityEngine.Vector3.Cross(localUp, axisA);
         int startIndex = vertices.Count;
 
         for (int y = 0; y <= resolution; y++)
         {
             for (int x = 0; x <= resolution; x++)
             {
-                Vector2 percent = new Vector2(x, y) / resolution;
-                Vector3 pointOnUnitCube = localUp
+                UnityEngine.Vector2 percent = new UnityEngine.Vector2(x, y) / resolution;
+                UnityEngine.Vector3 pointOnUnitCube = localUp
                     + (percent.x - 0.5f) * 2f * axisA
                     + (percent.y - 0.5f) * 2f * axisB;
-                Vector3 pointOnUnitSphere = pointOnUnitCube.normalized;
 
-                Vector3 pointOnPlanet = shapeGenerator.CalculatePointOnPlanet(pointOnUnitSphere, radius);
+                UnityEngine.Vector3 pointOnUnitSphere = pointOnUnitCube.normalized;
+                UnityEngine.Vector3 pointOnPlanet = shapeGenerator.CalculatePointOnPlanet(pointOnUnitSphere);
 
                 vertices.Add(pointOnPlanet);
 
-                // Create triangles
                 if (x != resolution && y != resolution)
                 {
                     int current = startIndex + y * (resolution + 1) + x;

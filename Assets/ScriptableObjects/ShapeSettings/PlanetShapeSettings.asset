@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e37fbc6b40a20ed4186fa72ff1c37c92, type: 3}
+  m_Name: PlanetShapeSettings
+  m_EditorClassIdentifier: 
+  radius: 1
+  meshResolution: 50
+  noiseLayers:
+  - enabled: 1
+    strength: 0.3
+    baseRoughness: 1
+    numLayers: 4
+    persistence: 0.5
+    minValue: 0
+    center: {x: 0, y: 0, z: 0}
+  - enabled: 1
+    strength: 0.1
+    baseRoughness: 5
+    numLayers: 2
+    persistence: 0.4
+    minValue: 0
+    center: {x: 100, y: 100, z: 100}
