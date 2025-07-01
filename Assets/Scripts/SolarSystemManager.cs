@@ -6,30 +6,39 @@ public class SolarSystemManager : MonoBehaviour
 
     void Start()
     {
+        // Create Sun
         GameObject sun = CreateBody("Sun", Vector3.zero, 4f, Color.yellow);
-        GameObject planet = CreateBody("Planet", new Vector3(10f, 0, 0), 1f, Color.cyan);
-        var orbit = planet.AddComponent<Orbit>();
-        orbit.center = sun.transform;
-        orbit.orbitRadius = 10f;
-        orbit.orbitSpeed = 0.5f;
 
-        GameObject moon = CreateBody("Moon", planet.transform.position + new Vector3(2f, 0, 0), 0.5f, Color.gray);
+        // Create Planet
+        GameObject planet = CreateBody("Planet", new Vector3(10f, 0, 0), 1f, Color.cyan);
+        var planetOrbit = planet.AddComponent<Orbit>();
+        planetOrbit.center = sun.transform;
+        planetOrbit.orbitRadius = 10f;
+        planetOrbit.orbitSpeed = 0.5f;
+
+        // Create Moon without manual position
+        GameObject moon = CreateBody("Moon", Vector3.zero, 0.5f, Color.gray);
         var moonOrbit = moon.AddComponent<Orbit>();
         moonOrbit.center = planet.transform;
-        moonOrbit.orbitRadius = 2f;
+
+        // Access CelestialBody components for radius
+        var planetBody = planet.GetComponent<CelestialBody>();
+        var moonBody = moon.GetComponent<CelestialBody>();
+
+        // Set orbit radius with safe margin to avoid clipping
+        moonOrbit.orbitRadius = planetBody.radius + moonBody.radius + 1f;
         moonOrbit.orbitSpeed = 2f;
     }
 
     GameObject CreateBody(string name, Vector3 position, float radius, Color color)
     {
-        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        body.name = name;
+        GameObject body = new GameObject(name);
         body.transform.position = position;
 
         var cb = body.AddComponent<CelestialBody>();
         cb.radius = radius;
         cb.color = color;
-        cb.templateMaterial = planetMaterial; // assign it here
+        cb.templateMaterial = planetMaterial; // assign your material
 
         return body;
     }
