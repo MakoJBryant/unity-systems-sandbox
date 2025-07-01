@@ -11,6 +11,7 @@ public class SolarSystemManager : MonoBehaviour
     {
         // Create Sun
         GameObject sun = CreateBody("Sun", Vector3.zero, sunSettings, Color.yellow);
+        sun.AddComponent<PlanetFaceCamera>();
 
         // Create Planet
         GameObject planet = CreateBody("Planet", new Vector3(10f, 0, 0), planetSettings, Color.cyan);
