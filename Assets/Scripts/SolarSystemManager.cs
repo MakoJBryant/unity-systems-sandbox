@@ -64,15 +64,24 @@ public class SolarSystemManager : MonoBehaviour
         GameObject body = new GameObject(name);
         body.transform.position = position;
 
-        // Add mesh components first
+        // Add mesh components
         body.AddComponent<MeshFilter>();
-        var meshRenderer = body.AddComponent<MeshRenderer>();
+        body.AddComponent<MeshRenderer>();
 
+        // Add CelestialBody
         var cb = body.AddComponent<CelestialBody>();
         cb.shapeSettings = shapeSettings;
         cb.color = color;
         cb.templateMaterial = planetMaterial;
 
+        /*
+#if UNITY_EDITOR
+        // Add DrawNormals only in editor for debugging
+        body.AddComponent<DrawNormals>();
+#endif
+        */
+
         return body;
     }
+
 }

@@ -18,4 +18,6 @@ public class NoiseLayer
     public float persistence = 0.5f;
     public float minValue = 0f;
     public Vector3 center = Vector3.zero;
+    public bool useFirstLayerAsMask = false;
 }
+

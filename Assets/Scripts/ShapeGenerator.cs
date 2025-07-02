@@ -20,14 +20,26 @@ public class ShapeGenerator
     {
         float elevation = 0f;
 
-        for (int i = 0; i < noiseFilters.Length; i++)
+        float firstLayerValue = 0f;
+        if (noiseFilters.Length > 0)
+        {
+            firstLayerValue = noiseFilters[0].Evaluate(pointOnUnitSphere);
+            if (settings.noiseLayers[0].enabled)
+            {
+                elevation = firstLayerValue;
+            }
+        }
+
+        for (int i = 1; i < noiseFilters.Length; i++)
         {
             if (settings.noiseLayers[i].enabled)
             {
-                elevation += noiseFilters[i].Evaluate(pointOnUnitSphere);
+                float mask = settings.noiseLayers[i].useFirstLayerAsMask ? firstLayerValue : 1f;
+                elevation += noiseFilters[i].Evaluate(pointOnUnitSphere) * mask;
             }
         }
 
         return pointOnUnitSphere * (settings.radius + elevation);
     }
+
 }
