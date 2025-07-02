@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e37fbc6b40a20ed4186fa72ff1c37c92, type: 3}
   m_Name: MoonShapeSettings
   m_EditorClassIdentifier: 
-  radius: 0.5
+  radius: 2
   meshResolution: 30
   noiseLayers:
   - enabled: 1
@@ -22,3 +22,4 @@ MonoBehaviour:
     persistence: 0.5
     minValue: 0
     center: {x: 50, y: 50, z: 50}
+    useFirstLayerAsMask: 0

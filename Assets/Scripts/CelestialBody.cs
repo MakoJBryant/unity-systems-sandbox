@@ -1,72 +1,89 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class CelestialBody : MonoBehaviour
 {
     public ShapeSettings shapeSettings;
     public Material templateMaterial;
     public Color color = Color.white;
 
-    private ShapeGenerator shapeGenerator;
+    private MeshFilter meshFilter;
+    private MeshRenderer meshRenderer;
 
     void Start()
     {
-        shapeGenerator = new ShapeGenerator(shapeSettings);
-
-        MeshFilter mf = GetComponent<MeshFilter>();
-        mf.mesh = GenerateMesh();
-
-        MeshRenderer mr = GetComponent<MeshRenderer>();
-        mr.material = new Material(templateMaterial);
-        mr.material.color = color;
-
+        InitializeComponents();
+        GenerateMesh();
     }
 
-    Mesh GenerateMesh()
+    private void InitializeComponents()
     {
-        int resolution = shapeSettings.meshResolution;
-        Mesh mesh = new Mesh();
-        List<UnityEngine.Vector3> vertices = new List<UnityEngine.Vector3>();
-        List<int> triangles = new List<int>();
+        meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter.sharedMesh == null)
+            meshFilter.sharedMesh = new Mesh();
 
-        UnityEngine.Vector3[] directions = {
-            UnityEngine.Vector3.up,
-            UnityEngine.Vector3.down,
-            UnityEngine.Vector3.left,
-            UnityEngine.Vector3.right,
-            UnityEngine.Vector3.forward,
-            UnityEngine.Vector3.back
+        meshRenderer = GetComponent<MeshRenderer>();
+    }
+
+    public void GenerateMesh()
+    {
+        if (shapeSettings == null)
+        {
+            Debug.LogWarning($"{name} is missing ShapeSettings.");
+            return;
+        }
+
+        var shapeGenerator = new ShapeGenerator(shapeSettings);
+        var resolution = shapeSettings.meshResolution;
+
+        var mesh = new Mesh();
+        var vertices = new List<Vector3>();
+        var triangles = new List<int>();
+
+        Vector3[] directions = {
+            Vector3.up, Vector3.down,
+            Vector3.left, Vector3.right,
+            Vector3.forward, Vector3.back
         };
 
-        for (int i = 0; i < 6; i++)
+        foreach (var dir in directions)
         {
-            ConstructFace(directions[i], vertices, triangles, resolution);
+            ConstructFace(dir, vertices, triangles, resolution, shapeGenerator);
         }
 
         mesh.SetVertices(vertices);
         mesh.SetTriangles(triangles, 0);
         mesh.RecalculateNormals();
 
-        return mesh;
+        meshFilter.sharedMesh = mesh;
+
+        // Set material
+        if (templateMaterial != null)
+        {
+            Material matInstance = new Material(templateMaterial);
+            matInstance.color = color;
+            meshRenderer.sharedMaterial = matInstance;
+        }
     }
 
-    void ConstructFace(UnityEngine.Vector3 localUp, List<UnityEngine.Vector3> vertices, List<int> triangles, int resolution)
+    private void ConstructFace(Vector3 localUp, List<Vector3> vertices, List<int> triangles, int resolution, ShapeGenerator shapeGenerator)
     {
-        UnityEngine.Vector3 axisA = new UnityEngine.Vector3(localUp.y, localUp.z, localUp.x);
-        UnityEngine.Vector3 axisB = UnityEngine.Vector3.Cross(localUp, axisA);
+        Vector3 axisA = new Vector3(localUp.y, localUp.z, localUp.x);
+        Vector3 axisB = Vector3.Cross(localUp, axisA);
         int startIndex = vertices.Count;
 
         for (int y = 0; y <= resolution; y++)
         {
             for (int x = 0; x <= resolution; x++)
             {
-                UnityEngine.Vector2 percent = new UnityEngine.Vector2(x, y) / resolution;
-                UnityEngine.Vector3 pointOnUnitCube = localUp
+                Vector2 percent = new Vector2(x, y) / resolution;
+                Vector3 pointOnUnitCube = localUp
                     + (percent.x - 0.5f) * 2f * axisA
                     + (percent.y - 0.5f) * 2f * axisB;
 
-                UnityEngine.Vector3 pointOnUnitSphere = pointOnUnitCube.normalized;
-                UnityEngine.Vector3 pointOnPlanet = shapeGenerator.CalculatePointOnPlanet(pointOnUnitSphere);
+                Vector3 pointOnUnitSphere = pointOnUnitCube.normalized;
+                Vector3 pointOnPlanet = shapeGenerator.CalculatePointOnPlanet(pointOnUnitSphere);
 
                 vertices.Add(pointOnPlanet);
 
