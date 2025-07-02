@@ -269,10 +269,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5189c0b3269cd024783aa46c42e7461f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  planetMaterial: {fileID: 2100000, guid: 0aee00617a7c5a94fbfd9b1ff9de148c, type: 2}
-  sunSettings: {fileID: 0}
-  planetSettings: {fileID: 0}
-  moonSettings: {fileID: 0}
+  planetMaterial: {fileID: 2100000, guid: 1ea1497023385a74fb6271d2fc45d748, type: 2}
+  sunMaterial: {fileID: 2100000, guid: 050f5b125efdb7e408c80a9500de6668, type: 2}
+  sunSettings: {fileID: 11400000, guid: f9ef889555d7e234383f64fee032ac53, type: 2}
+  planetSettings: {fileID: 11400000, guid: 60c3937503598fe4cbf9c3a59e49b561, type: 2}
+  moonSettings: {fileID: 11400000, guid: 09c92b7f13896eb4e8fb3e1b44bc7383, type: 2}
 --- !u!4 &938353973
 Transform:
   m_ObjectHideFlags: 0

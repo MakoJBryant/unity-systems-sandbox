@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e37fbc6b40a20ed4186fa72ff1c37c92, type: 3}
   m_Name: PlanetShapeSettings
   m_EditorClassIdentifier: 
-  radius: 4
+  radius: 2
   meshResolution: 50
   noiseLayers:
   - enabled: 1

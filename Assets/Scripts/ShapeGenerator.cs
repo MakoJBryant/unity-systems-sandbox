@@ -1,45 +1,31 @@
 using UnityEngine;
-
 public class ShapeGenerator
 {
+    private INoiseFilter[] noiseFilters;
+    private NoiseSettings[] noiseLayers;
+
     private ShapeSettings settings;
-    private NoiseFilter[] noiseFilters;
 
     public ShapeGenerator(ShapeSettings settings)
     {
         this.settings = settings;
-        noiseFilters = new NoiseFilter[settings.noiseLayers.Length];
+        noiseFilters = new INoiseFilter[settings.noiseLayers.Length];
 
         for (int i = 0; i < noiseFilters.Length; i++)
         {
-            noiseFilters[i] = new NoiseFilter(settings.noiseLayers[i]);
+            noiseFilters[i] = NoiseFilterFactory.CreateNoiseFilter(settings.noiseLayers[i].noiseSettings);
         }
     }
 
     public Vector3 CalculatePointOnPlanet(Vector3 pointOnUnitSphere)
     {
-        float elevation = 0f;
+        float elevation = 0;
 
-        float firstLayerValue = 0f;
-        if (noiseFilters.Length > 0)
+        foreach (var filter in noiseFilters)
         {
-            firstLayerValue = noiseFilters[0].Evaluate(pointOnUnitSphere);
-            if (settings.noiseLayers[0].enabled)
-            {
-                elevation = firstLayerValue;
-            }
+            elevation += filter.Evaluate(pointOnUnitSphere);
         }
 
-        for (int i = 1; i < noiseFilters.Length; i++)
-        {
-            if (settings.noiseLayers[i].enabled)
-            {
-                float mask = settings.noiseLayers[i].useFirstLayerAsMask ? firstLayerValue : 1f;
-                elevation += noiseFilters[i].Evaluate(pointOnUnitSphere) * mask;
-            }
-        }
-
-        return pointOnUnitSphere * (settings.radius + elevation);
+        return pointOnUnitSphere * settings.radius * (1 + elevation);
     }
-
 }
