@@ -295,8 +295,11 @@ public class PlanetGenerator : MonoBehaviour
 
     Texture2D UpdateBiomeTexture()
     {
-        if (colorSettings.biomes == null || colorSettings.biomes.Length == 0)
+        var biomeSettings = colorSettings.biomeSettings;
+        if (biomeSettings == null || biomeSettings.biomes == null || biomeSettings.biomes.Length == 0)
             return null;
+
+        var biomes = biomeSettings.biomes;
 
         int texRes = 256;
         Texture2D texture = new Texture2D(texRes, 1, TextureFormat.RGBA32, false)
@@ -306,14 +309,15 @@ public class PlanetGenerator : MonoBehaviour
         };
 
         Color[] pixels = new Color[texRes];
-        System.Array.Sort(colorSettings.biomes, (a, b) => a.startHeight.CompareTo(b.startHeight));
+
+        System.Array.Sort(biomes, (a, b) => a.startHeight.CompareTo(b.startHeight));
 
         for (int i = 0; i < texRes; i++)
         {
             float h = i / (float)(texRes - 1);
-            Color col = colorSettings.biomes[0].color;
+            Color col = biomes[0].color;
 
-            foreach (var biome in colorSettings.biomes)
+            foreach (var biome in biomes)
             {
                 float blend = Mathf.Clamp01((h - biome.startHeight) / biome.blendAmount);
                 col = Color.Lerp(col, biome.color, blend);

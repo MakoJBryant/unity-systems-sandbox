@@ -1,37 +1,26 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MakoJBryant.SolarSystem.Generation
 {
     [CreateAssetMenu(fileName = "New Color Settings", menuName = "Solar System/Color Settings")]
     public class ColorSettings : ScriptableObject
     {
-        public Material planetMaterial; // Reference to your S_PlanetSurface material
-        public Material oceanMaterial;  // Reference to your OceanMaterial
-        public Color oceanColor;        // Base ocean color (still used for biome texture)
+        public Material planetMaterial;
+        public Material oceanMaterial;
+        public Color oceanColor;
 
-        public Biome[] biomes;
-
-        [System.Serializable]
-        public struct Biome
-        {
-            public string name;
-            public Color color;
-            [Range(0, 1)]
-            public float startHeight;
-            [Range(0, 1)]
-            public float blendAmount;
-        }
+        public BiomeSettings biomeSettings;
 
         [Header("Atmosphere Settings")]
-        public Material atmosphereMaterial; // Reference to your AtmosphereMaterial
-        public Color atmosphereColor = new Color(0.2f, 0.4f, 1.0f, 1.0f); // Default light blue
+        public Material atmosphereMaterial;
+        public Color atmosphereColor = new Color(0.2f, 0.4f, 1.0f, 1.0f);
         [Range(0.1f, 10.0f)]
-        public float atmosphereDensity = 1.0f; // Overall intensity/opacity
+        public float atmosphereDensity = 1.0f;
         [Range(1.0f, 50.0f)]
-        public float atmospherePower = 5.0f; // Sharpness of alpha falloff (controls falloff steepness)
+        public float atmospherePower = 5.0f;
         [Range(0.0f, 1.0f)]
-        public float atmosphereAmbientLightInfluence = 0.1f; // Base ambient light (for dark side)
+        public float atmosphereAmbientLightInfluence = 0.1f;
         [Range(1.0f, 20.0f)]
-        public float atmosphereRimPower = 3.0f; // Sharpness of rim glow
+        public float atmosphereRimPower = 3.0f;
     }
 }
