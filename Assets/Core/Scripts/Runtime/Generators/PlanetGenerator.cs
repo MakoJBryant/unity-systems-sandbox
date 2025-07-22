@@ -66,6 +66,12 @@ public class PlanetGenerator : MonoBehaviour
             return;
         }
 
+        if (shapeSettings.noiseLayers == null || shapeSettings.noiseLayers.Length == 0)
+        {
+            Debug.LogWarning("No noise layers found in ShapeSettings—aborting planet generation.");
+            return;
+        }
+
         mesh.Clear();
         SphereCreator.CreateSphereMesh(resolution, radius, out Vector3[] vertices, out int[] triangles, out Vector2[] uvs);
 
@@ -86,9 +92,10 @@ public class PlanetGenerator : MonoBehaviour
             float displacement = shapeSettings.globalHeightOffset;
             float firstValue = 0f;
 
-            foreach (var layer in shapeSettings.noiseLayers)
+            for (int layerIndex = 0; layerIndex < shapeSettings.noiseLayers.Length; layerIndex++)
             {
-                if (!layer.enabled) continue;
+                NoiseLayer layer = shapeSettings.noiseLayers[layerIndex];
+                if (layer == null || !layer.enabled) continue;
 
                 float noise = 0f, freq = layer.roughness, amp = 1f, ampSum = 0f;
                 for (int o = 0; o < layer.octaves; o++)
@@ -103,8 +110,12 @@ public class PlanetGenerator : MonoBehaviour
                 }
 
                 float final = (ampSum == 0f ? 0f : noise / ampSum) + layer.minValue;
-                if (layer.useFirstLayerAsMask) firstValue = final;
-                if (layer.useFirstLayerAsMask && firstValue <= 0f) final = 0f;
+
+                if (layerIndex == 0)
+                    firstValue = final;
+
+                if (layer.useFirstLayerAsMask && firstValue <= 0f)
+                    final = 0f;
 
                 displacement += final * layer.strength;
             }

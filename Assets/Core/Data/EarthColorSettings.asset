@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e282fdd8f74a344ba6a3a9e8c1801af, type: 3}
   m_Name: EarthColorSettings
   m_EditorClassIdentifier: 
-  planetMaterial: {fileID: 0}
-  oceanMaterial: {fileID: 0}
-  oceanColor: {r: 0, g: 0, b: 0, a: 0}
-  biomes: []
-  atmosphereMaterial: {fileID: 0}
+  planetMaterial: {fileID: 2100000, guid: 0fdfdfc5ed1cbc3409a44ba3c60343b6, type: 2}
+  oceanMaterial: {fileID: 2100000, guid: a138f77458ee8e34c85a873c8c3d370c, type: 2}
+  oceanColor: {r: 0, g: 0.1802516, b: 1, a: 1}
+  biomeSettings: {fileID: 11400000, guid: 09615fb84979425438f343748c7b62b5, type: 2}
+  atmosphereMaterial: {fileID: 2100000, guid: 03c090273878ec84789691eca3174455, type: 2}
   atmosphereColor: {r: 0.2, g: 0.4, b: 1, a: 1}
   atmosphereDensity: 1
   atmospherePower: 5

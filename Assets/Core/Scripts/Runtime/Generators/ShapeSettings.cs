@@ -1,4 +1,4 @@
-using UnityEngine; // Required for ScriptableObject and Header
+using UnityEngine;
 
 namespace MakoJBryant.SolarSystem.Generation
 {
@@ -11,7 +11,8 @@ namespace MakoJBryant.SolarSystem.Generation
         [Tooltip("Adjusts the overall height of the terrain relative to the base radius. Negative values will create oceans.")]
         public float globalHeightOffset = 0f;
 
-        // This is the array that will hold all your different noise configurations
+        // Reference external NoiseLayer assets (ScriptableObjects)
+        [Tooltip("External NoiseLayer ScriptableObjects used for terrain generation.")]
         public NoiseLayer[] noiseLayers;
     }
 }

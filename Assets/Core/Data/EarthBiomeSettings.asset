@@ -12,4 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54cd2839993355f4e967938b75ab5d1b, type: 3}
   m_Name: EarthBiomeSettings
   m_EditorClassIdentifier: 
-  biomes: []
+  biomes:
+  - name: Sand
+    color: {r: 0.9009434, g: 0.7444869, b: 0.22948559, a: 1}
+    startHeight: 0.5
+    blendAmount: 0.25
+  - name: Grass
+    color: {r: 0.1718371, g: 0.4575472, b: 0.15755162, a: 1}
+    startHeight: 0.6
+    blendAmount: 0
+  - name: Mountain
+    color: {r: 0.4198113, g: 0.36832502, b: 0.36832502, a: 1}
+    startHeight: 0.7
+    blendAmount: 0
+  - name: Snow
+    color: {r: 1, g: 1, b: 1, a: 1}
+    startHeight: 0.8
+    blendAmount: 0

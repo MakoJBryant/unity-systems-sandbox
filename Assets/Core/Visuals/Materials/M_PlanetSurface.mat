@@ -121,9 +121,9 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaxHeight: 1
+    - _MaxHeight: 1.3839362
     - _Metallic: 0
-    - _MinHeight: 0
+    - _MinHeight: 1.1801573
     - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
