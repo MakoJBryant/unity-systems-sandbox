@@ -14,18 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   biomes:
   - name: Sand
-    color: {r: 0.9009434, g: 0.7444869, b: 0.22948559, a: 1}
-    startHeight: 0.5
+    color: {r: 0.827451, g: 0.85490197, b: 0.85882354, a: 1}
+    startHeight: 0
     blendAmount: 0.25
   - name: Grass
-    color: {r: 0.1718371, g: 0.4575472, b: 0.15755162, a: 1}
-    startHeight: 0.6
-    blendAmount: 0
+    color: {r: 0.23921569, g: 0.45490196, b: 0.22352941, a: 1}
+    startHeight: 0.5
+    blendAmount: 0.25
   - name: Mountain
-    color: {r: 0.4198113, g: 0.36832502, b: 0.36832502, a: 1}
-    startHeight: 0.7
-    blendAmount: 0
+    color: {r: 0.46666667, g: 0.44313726, b: 0.4117647, a: 1}
+    startHeight: 0.6
+    blendAmount: 0.25
   - name: Snow
     color: {r: 1, g: 1, b: 1, a: 1}
-    startHeight: 0.8
+    startHeight: 0.85
     blendAmount: 0
