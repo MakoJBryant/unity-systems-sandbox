@@ -12,7 +12,7 @@ public class PlanetGenerator : MonoBehaviour
     public Light sceneSunLight;
 
     [Header("Settings Assets")]
-    public ShapeSettings shapeSettings;
+    public TerrainSettings terrainSettings;
     public ColorSettings colorSettings;
 
     [Range(0.5f, 1.5f)] public float atmosphereExpansionFactor = 1.02f;
@@ -39,6 +39,9 @@ public class PlanetGenerator : MonoBehaviour
     private float maxElevation;
     private Texture2D biomeTexture;
 
+    // REMOVE THIS LINE:
+    // private TerrainGenerator terrainGenerator;
+
     void Awake()
     {
         meshFilter = GetComponent<MeshFilter>();
@@ -48,94 +51,52 @@ public class PlanetGenerator : MonoBehaviour
         mesh = new Mesh { name = "Generated Planet Mesh" };
         meshFilter.sharedMesh = mesh;
 
+        // REMOVE THIS LINE:
+        // terrainGenerator = new TerrainGenerator(terrainSettings);
+
         GeneratePlanet();
     }
 
     void OnValidate()
     {
-        if (shapeSettings != null && colorSettings != null)
+        if (terrainSettings != null && colorSettings != null)
             GeneratePlanet();
     }
 
     [ContextMenu("Generate Planet Now")]
     public void GeneratePlanet()
     {
-        if (shapeSettings == null || colorSettings == null)
+        if (terrainSettings == null || colorSettings == null)
         {
-            Debug.LogWarning("ShapeSettings or ColorSettings missing—aborting planet generation.");
+            Debug.LogWarning("TerrainSettings or ColorSettings missing—aborting planet generation.");
             return;
         }
 
-        if (shapeSettings.noiseLayers == null || shapeSettings.noiseLayers.Length == 0)
+        if (terrainSettings.noiseLayers == null || terrainSettings.noiseLayers.Length == 0)
         {
-            Debug.LogWarning("No noise layers found in ShapeSettings—aborting planet generation.");
+            Debug.LogWarning("No noise layers found in TerrainSettings—aborting planet generation.");
             return;
         }
 
         mesh.Clear();
         SphereCreator.CreateSphereMesh(resolution, radius, out Vector3[] vertices, out int[] triangles, out Vector2[] uvs);
 
-        // --- DIAGNOSTIC: Calculate mesh centroid before displacement ---
+        // DIAGNOSTIC: Calculate centroid before terrain deformation
         Vector3 centroidBefore = Vector3.zero;
         for (int i = 0; i < vertices.Length; i++)
             centroidBefore += vertices[i];
         centroidBefore /= vertices.Length;
         Debug.Log($"[PlanetGenerator] Mesh centroid before displacement: {centroidBefore}");
 
-        minElevation = float.MaxValue;
-        maxElevation = float.MinValue;
+        // CALL STATIC METHOD DIRECTLY - NO INSTANCE:
+        // Assuming the signature:
+        // TerrainGenerator.ApplyToMesh(ref Vector3[] vertices, float baseRadius, out float minElevation, out float maxElevation, TerrainSettings settings)
+        // or adjust parameters as needed.
 
-        // Displace vertices based on noise, in local space
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            Vector3 normal = vertices[i].normalized;
-            float displacement = shapeSettings.globalHeightOffset;
-            float firstValue = 0f;
+        TerrainGenerator.ApplyTerrainDeformation(vertices, terrainSettings, out Vector3[] displacedVertices, out minElevation, out maxElevation);
+        vertices = displacedVertices;
 
-            for (int layerIndex = 0; layerIndex < shapeSettings.noiseLayers.Length; layerIndex++)
-            {
-                NoiseLayer layer = shapeSettings.noiseLayers[layerIndex];
-                if (layer == null || !layer.enabled) continue;
-
-                float noise = 0f, freq = layer.roughness, amp = 1f, ampSum = 0f;
-                for (int o = 0; o < layer.octaves; o++)
-                {
-                    Vector3 p = (normal + layer.offset) * freq;
-                    float v = PerlinNoise3D.GenerateNoise(p.x, p.y, p.z);
-                    v = layer.noiseType == NoiseType.Ridge ? 1 - Mathf.Abs(v * 2 - 1) : v * 2 - 1;
-                    noise += v * amp;
-                    ampSum += amp;
-                    amp *= layer.persistence;
-                    freq *= layer.lacunarity;
-                }
-
-                float final = (ampSum == 0f ? 0f : noise / ampSum) + layer.minValue;
-
-                if (layerIndex == 0)
-                    firstValue = final;
-
-                if (layer.useFirstLayerAsMask && firstValue <= 0f)
-                    final = 0f;
-
-                displacement += final * layer.strength;
-            }
-
-            // Displace vertex along its normal (local space)
-            float originalLength = vertices[i].magnitude;
-            vertices[i] = normal * (originalLength + displacement);
-
-            float height = vertices[i].magnitude;
-            minElevation = Mathf.Min(minElevation, height);
-            maxElevation = Mathf.Max(maxElevation, height);
-
-            // Debug displaced vertex positions of first few vertices (optional)
-            if (i < 10)
-            {
-                Debug.Log($"[Vertex {i}] Normal: {normal}, Displacement: {displacement}, New Pos: {vertices[i]}");
-            }
-        }
-
-        // --- DIAGNOSTIC: Calculate mesh centroid after displacement ---
+        // DIAGNOSTIC: Calculate centroid after terrain deformation
         Vector3 centroidAfter = Vector3.zero;
         for (int i = 0; i < vertices.Length; i++)
             centroidAfter += vertices[i];

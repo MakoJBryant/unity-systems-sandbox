@@ -1,16 +1,14 @@
 using UnityEngine;
 
-public class TerrainSettings : MonoBehaviour
+namespace MakoJBryant.SolarSystem.Generation
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [CreateAssetMenu(fileName = "New Terrain Settings", menuName = "Solar System/Terrain Settings")]
+    public class TerrainSettings : ScriptableObject
     {
-        
-    }
+        [Tooltip("Adjusts the overall height of the terrain relative to the base radius. Negative values will create oceans.")]
+        public float globalHeightOffset = 0f;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        [Tooltip("Noise layers used for procedural terrain deformation.")]
+        public NoiseLayer[] noiseLayers;
     }
 }
