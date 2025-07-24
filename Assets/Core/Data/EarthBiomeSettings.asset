@@ -16,16 +16,16 @@ MonoBehaviour:
   - name: Sand
     color: {r: 0.827451, g: 0.85490197, b: 0.85882354, a: 1}
     startHeight: 0
-    blendAmount: 0.25
+    blendAmount: 0.1
   - name: Grass
     color: {r: 0.23921569, g: 0.45490196, b: 0.22352941, a: 1}
     startHeight: 0.5
     blendAmount: 0.25
   - name: Mountain
     color: {r: 0.46666667, g: 0.44313726, b: 0.4117647, a: 1}
-    startHeight: 0.6
-    blendAmount: 0.25
+    startHeight: 0.7
+    blendAmount: 0.1
   - name: Snow
-    color: {r: 1, g: 1, b: 1, a: 1}
+    color: {r: 0.6556604, g: 0.6556604, b: 0.6556604, a: 1}
     startHeight: 0.85
-    blendAmount: 0
+    blendAmount: 0.1
