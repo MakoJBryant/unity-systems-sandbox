@@ -169,98 +169,35 @@ public class PlanetGenerator : MonoBehaviour
 
     void GenerateOceanPlane()
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = transform.GetChild(i);
-            if (child.name == "Ocean" && child.gameObject != oceanGameObject)
-            {
-                DestroyImmediate(child.gameObject);
-            }
-        }
-
-        if (oceanGameObject == null)
-        {
-            oceanGameObject = new GameObject("Ocean");
-            oceanGameObject.transform.SetParent(transform, false);
-            oceanMeshFilter = oceanGameObject.AddComponent<MeshFilter>();
-            oceanMeshRenderer = oceanGameObject.AddComponent<MeshRenderer>();
-            oceanMesh = new Mesh { name = "Generated Ocean Mesh" };
-            oceanMeshFilter.sharedMesh = oceanMesh;
-        }
-
-        oceanMesh.Clear();
-        float oceanRadius = Mathf.Lerp(minElevation, maxElevation * 0.999f, seaLevel);
-        SphereCreator.CreateSphereMesh(resolution, oceanRadius, out Vector3[] v, out int[] t, out Vector2[] uv);
-
-        oceanMesh.vertices = v;
-        oceanMesh.triangles = t;
-        oceanMesh.uv = uv;
-        oceanMesh.RecalculateNormals();
-        oceanMesh.RecalculateBounds();
-
-        if (oceanMeshRenderer != null && colorSettings.oceanMaterial != null)
-        {
-            oceanMeshRenderer.sharedMaterial = colorSettings.oceanMaterial;
-            oceanMeshRenderer.sharedMaterial.SetFloat("_Radius", oceanRadius);
-            oceanMeshRenderer.sharedMaterial.SetColor("_Color", colorSettings.oceanColor);
-            oceanMeshRenderer.sharedMaterial.SetVector("_PlanetCenter", transform.position);
-        }
-
-        Debug.Log($"Ocean Transform - Position: {oceanGameObject.transform.position}, Rotation: {oceanGameObject.transform.rotation.eulerAngles}, Scale: {oceanGameObject.transform.localScale}");
+        oceanGameObject = OceanGenerator.GenerateOcean(
+            transform,
+            resolution,
+            minElevation,
+            maxElevation,
+            seaLevel,
+            colorSettings,
+            ref oceanGameObject,
+            ref oceanMeshFilter,
+            ref oceanMeshRenderer,
+            ref oceanMesh
+        );
     }
 
     void GenerateAtmospherePlane()
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = transform.GetChild(i);
-            if (child.name == "Atmosphere" && child.gameObject != atmosphereGameObject)
-            {
-                DestroyImmediate(child.gameObject);
-            }
-        }
-
-        if (atmosphereGameObject == null)
-        {
-            atmosphereGameObject = new GameObject("Atmosphere");
-            atmosphereGameObject.transform.SetParent(transform, false);
-            atmosphereMeshFilter = atmosphereGameObject.AddComponent<MeshFilter>();
-            atmosphereMeshRenderer = atmosphereGameObject.AddComponent<MeshRenderer>();
-            atmosphereController = atmosphereGameObject.AddComponent<AtmosphereController>();
-            atmosphereMesh = new Mesh { name = "Generated Atmosphere Mesh" };
-            atmosphereMeshFilter.sharedMesh = atmosphereMesh;
-        }
-
-        atmosphereMesh.Clear();
-        float atmosphereRadius = maxElevation * atmosphereExpansionFactor;
-        SphereCreator.CreateSphereMesh(resolution, atmosphereRadius, out Vector3[] v, out int[] t, out Vector2[] uv);
-
-        atmosphereMesh.vertices = v;
-        atmosphereMesh.triangles = t;
-        atmosphereMesh.uv = uv;
-        atmosphereMesh.RecalculateNormals();
-        atmosphereMesh.RecalculateBounds();
-
-        if (atmosphereMeshRenderer != null && colorSettings.atmosphereMaterial != null)
-        {
-            atmosphereMeshRenderer.sharedMaterial = colorSettings.atmosphereMaterial;
-
-#if UNITY_2023_1_OR_NEWER
-            if (sceneSunLight == null)
-                sceneSunLight = Object.FindFirstObjectByType<Light>();
-#else
-            if (sceneSunLight == null)
-                sceneSunLight = FindObjectOfType<Light>();
-#endif
-            atmosphereController.sunLight = sceneSunLight;
-            atmosphereController.atmosphereMaterial = colorSettings.atmosphereMaterial;
-            atmosphereController.atmosphereRadius = atmosphereRadius;
-            atmosphereController.atmosphereColor = colorSettings.atmosphereColor;
-            atmosphereController.density = colorSettings.atmosphereDensity;
-            atmosphereController.power = colorSettings.atmospherePower;
-            atmosphereController.ambientLightInfluence = colorSettings.atmosphereAmbientLightInfluence;
-            atmosphereController.rimPower = colorSettings.atmosphereRimPower;
-        }
+        atmosphereGameObject = AtmosphereGenerator.GenerateAtmosphere(
+            transform,
+            resolution,
+            maxElevation,
+            atmosphereExpansionFactor,
+            colorSettings,
+            sceneSunLight,
+            ref atmosphereGameObject,
+            ref atmosphereMeshFilter,
+            ref atmosphereMeshRenderer,
+            ref atmosphereMesh,
+            ref atmosphereController
+        );
 
         Debug.Log($"Atmosphere Transform - Position: {atmosphereGameObject.transform.position}, Rotation: {atmosphereGameObject.transform.rotation.eulerAngles}, Scale: {atmosphereGameObject.transform.localScale}");
     }
