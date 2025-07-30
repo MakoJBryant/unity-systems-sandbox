@@ -1,16 +1,16 @@
 using UnityEngine;
 
-public class OceanSettings : MonoBehaviour
+namespace MakoJBryant.SolarSystem.Generation
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [CreateAssetMenu(fileName = "New Ocean Settings", menuName = "Solar System/Ocean Settings")]
+    public class OceanSettings : ScriptableObject
     {
-        
-    }
+        [Header("Visual Settings")]
+        public Material oceanMaterial;
+        public Color oceanColor = new Color(0f, 0.2f, 0.6f, 1f);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        [Header("Surface Settings")]
+        [Range(0f, 1f)]
+        public float seaLevel = 0.5f;
     }
 }

@@ -1,74 +1,57 @@
 ﻿using UnityEngine;
 
-[ExecuteAlways]
-public class AtmosphereController : MonoBehaviour
+namespace MakoJBryant.SolarSystem.Generation
 {
-    [Tooltip("The material used for rendering the atmosphere.")]
-    public Material atmosphereMaterial;
-
-    [Tooltip("The main directional light in the scene, representing the Sun.")]
-    public Light sunLight;
-
-    [Tooltip("The radius of the atmosphere mesh. This should be slightly larger than the planet's radius.")]
-    public float atmosphereRadius;
-
-    [Header("Atmosphere Visual Settings")]
-    public Color atmosphereColor = new Color(0.2f, 0.4f, 1.0f, 1.0f); // Default light blue
-    [Range(0.1f, 10.0f)] public float density = 1.0f; // Overall intensity/opacity
-    [Range(1.0f, 50.0f)] public float power = 5.0f; // Sharpness of alpha falloff
-    [Range(0.0f, 1.0f)] public float ambientLightInfluence = 0.1f; // Base ambient light
-    [Range(1.0f, 20.0f)] public float rimPower = 3.0f; // Sharpness of rim glow
-
-    private void Start()
+    [ExecuteAlways]
+    public class AtmosphereController : MonoBehaviour
     {
-        if (atmosphereMaterial == null)
+        [Tooltip("The material used for rendering the atmosphere.")]
+        public Material atmosphereMaterial;
+
+        [Tooltip("The main directional light in the scene, representing the Sun.")]
+        public Light sunLight;
+
+        [Tooltip("The radius of the atmosphere mesh. This should be slightly larger than the planet's radius.")]
+        public float atmosphereRadius;
+
+        [Tooltip("Atmosphere visual settings as a ScriptableObject.")]
+        public AtmosphereSettings atmosphereSettings;
+
+        private void Start()
         {
-            MeshRenderer mr = GetComponent<MeshRenderer>();
-            if (mr != null)
+            if (atmosphereMaterial == null && GetComponent<MeshRenderer>() is MeshRenderer mr)
             {
                 atmosphereMaterial = mr.sharedMaterial;
             }
-            else
+
+            UpdateShaderProperties();
+        }
+
+        private void Update()
+        {
+            UpdateShaderProperties();
+        }
+
+        private void UpdateShaderProperties()
+        {
+            if (atmosphereSettings == null || atmosphereMaterial == null)
             {
-                Debug.LogWarning("AtmosphereController: No MeshRenderer found to get material from. Ensure one is present.", this);
+                Debug.LogWarning("AtmosphereController: Missing AtmosphereSettings or Material.", this);
+                return;
             }
+
+            // Direction to sun
+            Vector3 sunDirection = sunLight != null ? -sunLight.transform.forward : Vector3.forward;
+            Vector3 planetCenter = transform.parent != null ? transform.parent.position : transform.position;
+
+            atmosphereMaterial.SetVector("_SunDirection", sunDirection);
+            atmosphereMaterial.SetVector("_PlanetCenter", planetCenter);
+            atmosphereMaterial.SetFloat("_AtmosphereRadius", atmosphereRadius);
+            atmosphereMaterial.SetColor("_AtmosphereColor", atmosphereSettings.atmosphereColor);
+            atmosphereMaterial.SetFloat("_Density", atmosphereSettings.density);
+            atmosphereMaterial.SetFloat("_Power", atmosphereSettings.power);
+            atmosphereMaterial.SetFloat("_AmbientLightInfluence", atmosphereSettings.ambientLightInfluence);
+            atmosphereMaterial.SetFloat("_RimPower", atmosphereSettings.rimPower);
         }
-
-        UpdateShaderProperties();
-    }
-
-    private void Update()
-    {
-        UpdateShaderProperties();
-    }
-
-    private void UpdateShaderProperties()
-    {
-        if (atmosphereMaterial == null)
-        {
-            Debug.LogWarning("AtmosphereController: Atmosphere Material is null. Cannot set shader properties.", this);
-            return;
-        }
-
-        // Send sun direction
-        if (sunLight != null)
-        {
-            atmosphereMaterial.SetVector("_SunDirection", -sunLight.transform.forward);
-        }
-        else
-        {
-            atmosphereMaterial.SetVector("_SunDirection", Vector3.forward);
-        }
-
-        // Send the planet's *world-space* center as _PlanetCenter
-        Vector3 planetCenter = transform.parent != null ? transform.parent.position : transform.position;
-        atmosphereMaterial.SetVector("_PlanetCenter", planetCenter);
-
-        atmosphereMaterial.SetFloat("_AtmosphereRadius", atmosphereRadius);
-        atmosphereMaterial.SetColor("_AtmosphereColor", atmosphereColor);
-        atmosphereMaterial.SetFloat("_Density", density);
-        atmosphereMaterial.SetFloat("_Power", power);
-        atmosphereMaterial.SetFloat("_AmbientLightInfluence", ambientLightInfluence);
-        atmosphereMaterial.SetFloat("_RimPower", rimPower);
     }
 }

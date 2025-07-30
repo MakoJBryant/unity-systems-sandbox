@@ -9,7 +9,7 @@ namespace MakoJBryant.SolarSystem.Generation
             int resolution,
             float maxElevation,
             float expansionFactor,
-            ColorSettings colorSettings,
+            AtmosphereSettings atmosphereSettings,
             Light sunLight,
             ref GameObject atmosphereGO,
             ref MeshFilter atmosphereMeshFilter,
@@ -17,7 +17,7 @@ namespace MakoJBryant.SolarSystem.Generation
             ref Mesh atmosphereMesh,
             ref AtmosphereController atmosphereController)
         {
-            // Destroy any existing unreferenced atmosphere child
+            // Remove stray copies
             for (int i = parent.childCount - 1; i >= 0; i--)
             {
                 Transform child = parent.GetChild(i);
@@ -27,6 +27,7 @@ namespace MakoJBryant.SolarSystem.Generation
                 }
             }
 
+            // Create atmosphere object if null
             if (atmosphereGO == null)
             {
                 atmosphereGO = new GameObject("Atmosphere");
@@ -49,9 +50,10 @@ namespace MakoJBryant.SolarSystem.Generation
             atmosphereMesh.RecalculateNormals();
             atmosphereMesh.RecalculateBounds();
 
-            if (atmosphereMeshRenderer != null && colorSettings.atmosphereMaterial != null)
+            // Apply settings
+            if (atmosphereMeshRenderer != null && atmosphereSettings.atmosphereMaterial != null)
             {
-                atmosphereMeshRenderer.sharedMaterial = colorSettings.atmosphereMaterial;
+                atmosphereMeshRenderer.sharedMaterial = atmosphereSettings.atmosphereMaterial;
 
 #if UNITY_2023_1_OR_NEWER
                 if (sunLight == null)
@@ -62,13 +64,9 @@ namespace MakoJBryant.SolarSystem.Generation
 #endif
 
                 atmosphereController.sunLight = sunLight;
-                atmosphereController.atmosphereMaterial = colorSettings.atmosphereMaterial;
+                atmosphereController.atmosphereMaterial = atmosphereSettings.atmosphereMaterial;
                 atmosphereController.atmosphereRadius = atmosphereRadius;
-                atmosphereController.atmosphereColor = colorSettings.atmosphereColor;
-                atmosphereController.density = colorSettings.atmosphereDensity;
-                atmosphereController.power = colorSettings.atmospherePower;
-                atmosphereController.ambientLightInfluence = colorSettings.atmosphereAmbientLightInfluence;
-                atmosphereController.rimPower = colorSettings.atmosphereRimPower;
+                atmosphereController.atmosphereSettings = atmosphereSettings;
             }
 
             return atmosphereGO;

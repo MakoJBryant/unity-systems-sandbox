@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using MakoJBryant.SolarSystem.Generation;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
@@ -13,7 +13,9 @@ public class PlanetGenerator : MonoBehaviour
 
     [Header("Settings Assets")]
     public TerrainSettings terrainSettings;
-    public ColorSettings colorSettings;
+    public BiomeSettings biomeSettings;
+    public OceanSettings oceanSettings;
+    public AtmosphereSettings atmosphereSettings;
 
     [Range(0.5f, 1.5f)] public float atmosphereExpansionFactor = 1.02f;
 
@@ -39,9 +41,6 @@ public class PlanetGenerator : MonoBehaviour
     private float maxElevation;
     private Texture2D biomeTexture;
 
-    // REMOVE THIS LINE:
-    // private TerrainGenerator terrainGenerator;
-
     void Awake()
     {
         meshFilter = GetComponent<MeshFilter>();
@@ -51,60 +50,47 @@ public class PlanetGenerator : MonoBehaviour
         mesh = new Mesh { name = "Generated Planet Mesh" };
         meshFilter.sharedMesh = mesh;
 
-        // REMOVE THIS LINE:
-        // terrainGenerator = new TerrainGenerator(terrainSettings);
-
         GeneratePlanet();
     }
 
     void OnValidate()
     {
-        if (terrainSettings != null && colorSettings != null)
+        if (terrainSettings && biomeSettings && oceanSettings && atmosphereSettings)
             GeneratePlanet();
     }
 
     [ContextMenu("Generate Planet Now")]
     public void GeneratePlanet()
     {
-        if (terrainSettings == null || colorSettings == null)
+        if (!terrainSettings || !biomeSettings || !oceanSettings || !atmosphereSettings)
         {
-            Debug.LogWarning("TerrainSettings or ColorSettings missing—aborting planet generation.");
+            Debug.LogWarning("Missing required settings assetsâ€”aborting planet generation.");
             return;
         }
 
         if (terrainSettings.noiseLayers == null || terrainSettings.noiseLayers.Length == 0)
         {
-            Debug.LogWarning("No noise layers found in TerrainSettings—aborting planet generation.");
+            Debug.LogWarning("No noise layers found in TerrainSettingsâ€”aborting planet generation.");
             return;
         }
 
         mesh.Clear();
         SphereCreator.CreateSphereMesh(resolution, radius, out Vector3[] vertices, out int[] triangles, out Vector2[] uvs);
 
-        // DIAGNOSTIC: Calculate centroid before terrain deformation
         Vector3 centroidBefore = Vector3.zero;
-        for (int i = 0; i < vertices.Length; i++)
-            centroidBefore += vertices[i];
+        for (int i = 0; i < vertices.Length; i++) centroidBefore += vertices[i];
         centroidBefore /= vertices.Length;
         Debug.Log($"[PlanetGenerator] Mesh centroid before displacement: {centroidBefore}");
-
-        // CALL STATIC METHOD DIRECTLY - NO INSTANCE:
-        // Assuming the signature:
-        // TerrainGenerator.ApplyToMesh(ref Vector3[] vertices, float baseRadius, out float minElevation, out float maxElevation, TerrainSettings settings)
-        // or adjust parameters as needed.
 
         TerrainGenerator.ApplyTerrainDeformation(vertices, terrainSettings, out Vector3[] displacedVertices, out minElevation, out maxElevation);
         vertices = displacedVertices;
 
-        // DIAGNOSTIC: Calculate centroid after terrain deformation
         Vector3 centroidAfter = Vector3.zero;
-        for (int i = 0; i < vertices.Length; i++)
-            centroidAfter += vertices[i];
+        for (int i = 0; i < vertices.Length; i++) centroidAfter += vertices[i];
         centroidAfter /= vertices.Length;
         Debug.Log($"[PlanetGenerator] Mesh centroid after displacement: {centroidAfter}");
 
-        // Calculate normals from triangles
-        var normals = new Vector3[vertices.Length];
+        Vector3[] normals = new Vector3[vertices.Length];
         for (int i = 0; i < triangles.Length; i += 3)
         {
             int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
@@ -121,15 +107,16 @@ public class PlanetGenerator : MonoBehaviour
         mesh.normals = normals;
         mesh.RecalculateBounds();
 
-        // Update material properties
-        meshRenderer.sharedMaterial = colorSettings.planetMaterial;
-        meshRenderer.sharedMaterial.SetFloat("_Radius", radius);
-        meshRenderer.sharedMaterial.SetFloat("_MinHeight", minElevation);
-        meshRenderer.sharedMaterial.SetFloat("_MaxHeight", maxElevation);
-        meshRenderer.sharedMaterial.SetVector("_PlanetCenter", transform.position);
+        if (meshRenderer.sharedMaterial != null)
+        {
+            meshRenderer.sharedMaterial.SetFloat("_Radius", radius);
+            meshRenderer.sharedMaterial.SetFloat("_MinHeight", minElevation);
+            meshRenderer.sharedMaterial.SetFloat("_MaxHeight", maxElevation);
+            meshRenderer.sharedMaterial.SetVector("_PlanetCenter", transform.position);
+        }
 
         biomeTexture = UpdateBiomeTexture();
-        if (biomeTexture != null)
+        if (meshRenderer.sharedMaterial != null && biomeTexture != null)
             meshRenderer.sharedMaterial.SetTexture("_BiomeTexture", biomeTexture);
 
         meshCollider.sharedMesh = mesh;
@@ -148,13 +135,9 @@ public class PlanetGenerator : MonoBehaviour
             float orbitSpeed = 10f;
             transform.RotateAround(sunTransform.position, Vector3.up, orbitSpeed * Time.deltaTime);
 
-            meshRenderer.sharedMaterial.SetVector("_PlanetCenter", transform.position);
-
-            if (oceanMeshRenderer != null)
-                oceanMeshRenderer.sharedMaterial.SetVector("_PlanetCenter", transform.position);
-
-            if (atmosphereMeshRenderer != null)
-                atmosphereMeshRenderer.sharedMaterial.SetVector("_PlanetCenter", transform.position);
+            meshRenderer.sharedMaterial?.SetVector("_PlanetCenter", transform.position);
+            oceanMeshRenderer?.sharedMaterial?.SetVector("_PlanetCenter", transform.position);
+            atmosphereMeshRenderer?.sharedMaterial?.SetVector("_PlanetCenter", transform.position);
         }
     }
 
@@ -174,8 +157,8 @@ public class PlanetGenerator : MonoBehaviour
             resolution,
             minElevation,
             maxElevation,
-            seaLevel,
-            colorSettings,
+            oceanSettings.seaLevel,
+            oceanSettings,
             ref oceanGameObject,
             ref oceanMeshFilter,
             ref oceanMeshRenderer,
@@ -190,7 +173,7 @@ public class PlanetGenerator : MonoBehaviour
             resolution,
             maxElevation,
             atmosphereExpansionFactor,
-            colorSettings,
+            atmosphereSettings,
             sceneSunLight,
             ref atmosphereGameObject,
             ref atmosphereMeshFilter,
@@ -204,7 +187,6 @@ public class PlanetGenerator : MonoBehaviour
 
     Texture2D UpdateBiomeTexture()
     {
-        var biomeSettings = colorSettings.biomeSettings;
         if (biomeSettings == null || biomeSettings.biomes == null || biomeSettings.biomes.Length == 0)
             return null;
 

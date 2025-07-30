@@ -10,7 +10,7 @@ namespace MakoJBryant.SolarSystem.Generation
             float minElevation,
             float maxElevation,
             float seaLevel,
-            ColorSettings colorSettings,
+            OceanSettings oceanSettings,
             ref GameObject oceanGO,
             ref MeshFilter oceanMeshFilter,
             ref MeshRenderer oceanMeshRenderer,
@@ -47,11 +47,11 @@ namespace MakoJBryant.SolarSystem.Generation
             oceanMesh.RecalculateNormals();
             oceanMesh.RecalculateBounds();
 
-            if (oceanMeshRenderer != null && colorSettings.oceanMaterial != null)
+            if (oceanMeshRenderer != null && oceanSettings.oceanMaterial != null)
             {
-                oceanMeshRenderer.sharedMaterial = colorSettings.oceanMaterial;
+                oceanMeshRenderer.sharedMaterial = oceanSettings.oceanMaterial;
                 oceanMeshRenderer.sharedMaterial.SetFloat("_Radius", oceanRadius);
-                oceanMeshRenderer.sharedMaterial.SetColor("_Color", colorSettings.oceanColor);
+                oceanMeshRenderer.sharedMaterial.SetColor("_Color", oceanSettings.oceanColor);
                 oceanMeshRenderer.sharedMaterial.SetVector("_PlanetCenter", parent.position);
             }
 
