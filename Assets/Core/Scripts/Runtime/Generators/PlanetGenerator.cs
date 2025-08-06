@@ -19,8 +19,6 @@ public class PlanetGenerator : MonoBehaviour
 
     [Range(0.5f, 1.5f)] public float atmosphereExpansionFactor = 1.02f;
 
-    public Transform sunTransform;
-
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
     private MeshCollider meshCollider;
@@ -85,22 +83,6 @@ public class PlanetGenerator : MonoBehaviour
         AlignChildObjects();
         GenerateOceanPlane();
         GenerateAtmospherePlane();
-    }
-
-    void LateUpdate()
-    {
-        AlignChildObjects();
-
-        if (sunTransform != null)
-        {
-            float orbitSpeed = 10f;
-            transform.RotateAround(sunTransform.position, Vector3.up, orbitSpeed * Time.deltaTime);
-
-            Vector3 center = transform.position;
-            meshRenderer.sharedMaterial?.SetVector("_PlanetCenter", center);
-            oceanMeshRenderer?.sharedMaterial?.SetVector("_PlanetCenter", center);
-            atmosphereMeshRenderer?.sharedMaterial?.SetVector("_PlanetCenter", center);
-        }
     }
 
     private void AlignChildObjects()
