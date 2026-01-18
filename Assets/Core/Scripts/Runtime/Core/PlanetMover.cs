@@ -13,28 +13,36 @@ public class PlanetMover : MonoBehaviour
 
     [Header("Grounding")]
     public LayerMask groundMask;
-    public float groundCheckDistance = 1.1f;
+    public float groundCheckDistance = 1.5f;
 
     Rigidbody rb;
     GravityBody gravityBody;
+
     bool isGrounded;
+    bool jumpRequested;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         gravityBody = GetComponent<GravityBody>();
+
+        rb.useGravity = false;
+        rb.freezeRotation = true;
     }
 
     void Update()
     {
         HandleYaw();
-        HandleJump();
+
+        if (Input.GetButtonDown("Jump"))
+            jumpRequested = true;
     }
 
     void FixedUpdate()
     {
-        HandleMovement();
         CheckGround();
+        HandleMovement();
+        HandleJump();
     }
 
     // =============================
@@ -56,16 +64,20 @@ public class PlanetMover : MonoBehaviour
 
         Vector3 gravityDir = (transform.position - gravityBody.planet.transform.position).normalized;
 
-        // Movement relative to player orientation (Seb-style)
         Vector3 input = new Vector3(h, 0f, v).normalized;
         Vector3 desiredVelocity = transform.TransformDirection(input) * moveSpeed;
 
-        Vector3 currentVelocity = rb.linearVelocity;
-        Vector3 surfaceVelocity = Vector3.ProjectOnPlane(currentVelocity, gravityDir);
+        Vector3 velocity = rb.linearVelocity;
+
+        // Separate surface & vertical velocity
+        Vector3 surfaceVelocity = Vector3.ProjectOnPlane(velocity, gravityDir);
+        Vector3 verticalVelocity = Vector3.Project(velocity, gravityDir);
 
         Vector3 velocityChange = desiredVelocity - surfaceVelocity;
-
         rb.AddForce(velocityChange * acceleration, ForceMode.Acceleration);
+
+        // Preserve vertical motion (jump / gravity)
+        rb.linearVelocity = surfaceVelocity + verticalVelocity;
     }
 
     // =============================
@@ -81,19 +93,27 @@ public class PlanetMover : MonoBehaviour
             groundCheckDistance,
             groundMask
         );
+
+        Debug.DrawRay(transform.position, -gravityDir * groundCheckDistance,
+            isGrounded ? Color.green : Color.red);
     }
 
     // =============================
-    // JUMP
+    // SEB-STYLE JUMP
     // =============================
     void HandleJump()
     {
+        if (!jumpRequested) return;
+        jumpRequested = false;
+
         if (!isGrounded) return;
 
-        if (Input.GetButtonDown("Jump"))
-        {
-            Vector3 gravityDir = (transform.position - gravityBody.planet.transform.position).normalized;
-            rb.AddForce(-gravityDir * jumpForce, ForceMode.VelocityChange);
-        }
+        Vector3 gravityDir = (transform.position - gravityBody.planet.transform.position).normalized;
+
+        // Clear downward gravity velocity
+        rb.linearVelocity -= Vector3.Project(rb.linearVelocity, gravityDir);
+
+        // Apply jump
+        rb.AddForce(gravityDir * jumpForce, ForceMode.VelocityChange);
     }
 }
