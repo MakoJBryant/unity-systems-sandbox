@@ -1,4 +1,4 @@
-using MakoJBryant.SolarSystem.Generation;
+﻿using MakoJBryant.SolarSystem.Generation;
 using UnityEngine;
 
 public static class PlanetMeshBuilder
