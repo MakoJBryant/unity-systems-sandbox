@@ -3,36 +3,42 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlanetMover : MonoBehaviour
 {
+    [Header("References")]
+    public Transform planet;
+
     [Header("Movement")]
-    public float moveSpeed = 6f;
+    public float moveSpeed = 24f;
     public float acceleration = 20f;
-    public float jumpForce = 6f;
+    public float jumpForce = 24f;
+
+    [Header("Gravity")]
+    public float gravityStrength = 30f;
+    public float gravityAlignSpeed = 10f;
 
     [Header("Look")]
-    public float mouseSensitivity = 3f;
+    public float mouseSensitivity = 5f;
 
     [Header("Grounding")]
     public LayerMask groundMask;
     public float groundCheckDistance = 1.5f;
 
     Rigidbody rb;
-    GravityBody gravityBody;
-
     bool isGrounded;
     bool jumpRequested;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        gravityBody = GetComponent<GravityBody>();
 
         rb.useGravity = false;
-        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        rb.freezeRotation = false;
     }
 
     void Update()
     {
-        HandleYaw();
+        HandleYawInput();
 
         if (Input.GetButtonDown("Jump"))
             jumpRequested = true;
@@ -40,52 +46,70 @@ public class PlanetMover : MonoBehaviour
 
     void FixedUpdate()
     {
+        ApplyGravity();
+        AlignToGravity();
         CheckGround();
         HandleMovement();
         HandleJump();
     }
 
-    // =============================
-    // SEB-STYLE PLAYER YAW
-    // =============================
-    void HandleYaw()
+    void ApplyGravity()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * 100f * Time.deltaTime;
-        transform.Rotate(transform.up * mouseX, Space.World);
+        Vector3 gravityDir = (planet.position - transform.position).normalized;
+        rb.AddForce(gravityDir * gravityStrength, ForceMode.Acceleration);
     }
 
-    // =============================
-    // MOVEMENT ALONG PLANET SURFACE
-    // =============================
+    void AlignToGravity()
+    {
+        Vector3 gravityUp = (transform.position - planet.position).normalized;
+
+        Quaternion targetRotation =
+            Quaternion.FromToRotation(transform.up, gravityUp) * rb.rotation;
+
+        rb.MoveRotation(Quaternion.Slerp(
+            rb.rotation,
+            targetRotation,
+            gravityAlignSpeed * Time.fixedDeltaTime
+        ));
+    }
+
+    // FIXED: RAW mouse input
+    void HandleYawInput()
+    {
+        float mouseX =
+            Input.GetAxisRaw("Mouse X") * mouseSensitivity * 100f * Time.deltaTime;
+
+        Vector3 gravityUp = (transform.position - planet.position).normalized;
+
+        rb.MoveRotation(
+            Quaternion.AngleAxis(mouseX, gravityUp) * rb.rotation
+        );
+    }
+
     void HandleMovement()
     {
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        Vector3 gravityDir = (transform.position - gravityBody.planet.transform.position).normalized;
+        Vector3 gravityUp = (transform.position - planet.position).normalized;
 
         Vector3 input = new Vector3(h, 0f, v).normalized;
         Vector3 desiredVelocity = transform.TransformDirection(input) * moveSpeed;
 
         Vector3 velocity = rb.linearVelocity;
 
-        // Separate surface & vertical velocity
-        Vector3 surfaceVelocity = Vector3.ProjectOnPlane(velocity, gravityDir);
-        Vector3 verticalVelocity = Vector3.Project(velocity, gravityDir);
+        Vector3 surfaceVelocity = Vector3.ProjectOnPlane(velocity, gravityUp);
+        Vector3 verticalVelocity = Vector3.Project(velocity, gravityUp);
 
         Vector3 velocityChange = desiredVelocity - surfaceVelocity;
         rb.AddForce(velocityChange * acceleration, ForceMode.Acceleration);
 
-        // Preserve vertical motion (jump / gravity)
         rb.linearVelocity = surfaceVelocity + verticalVelocity;
     }
 
-    // =============================
-    // GROUND CHECK
-    // =============================
     void CheckGround()
     {
-        Vector3 gravityDir = (transform.position - gravityBody.planet.transform.position).normalized;
+        Vector3 gravityDir = (transform.position - planet.position).normalized;
 
         isGrounded = Physics.Raycast(
             transform.position,
@@ -93,27 +117,17 @@ public class PlanetMover : MonoBehaviour
             groundCheckDistance,
             groundMask
         );
-
-        Debug.DrawRay(transform.position, -gravityDir * groundCheckDistance,
-            isGrounded ? Color.green : Color.red);
     }
 
-    // =============================
-    // SEB-STYLE JUMP
-    // =============================
     void HandleJump()
     {
         if (!jumpRequested) return;
         jumpRequested = false;
-
         if (!isGrounded) return;
 
-        Vector3 gravityDir = (transform.position - gravityBody.planet.transform.position).normalized;
+        Vector3 gravityUp = (transform.position - planet.position).normalized;
 
-        // Clear downward gravity velocity
-        rb.linearVelocity -= Vector3.Project(rb.linearVelocity, gravityDir);
-
-        // Apply jump
-        rb.AddForce(gravityDir * jumpForce, ForceMode.VelocityChange);
+        rb.linearVelocity -= Vector3.Project(rb.linearVelocity, gravityUp);
+        rb.AddForce(gravityUp * jumpForce, ForceMode.VelocityChange);
     }
 }
