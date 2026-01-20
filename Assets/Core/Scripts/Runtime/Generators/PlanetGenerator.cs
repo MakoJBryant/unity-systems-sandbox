@@ -7,7 +7,7 @@ using MakoJBryant.SolarSystem.Generation;
 public class PlanetGenerator : MonoBehaviour
 {
     [Range(2, 256)] public int resolution = 64;
-    public float radius = 1f;
+    public float radius = 1000f;
     [Range(0f, 1f)] public float seaLevel = 0.5f;
     public Light sceneSunLight;
 
@@ -17,7 +17,17 @@ public class PlanetGenerator : MonoBehaviour
     public OceanSettings oceanSettings;
     public AtmosphereSettings atmosphereSettings;
 
-    [Range(0.5f, 1.5f)] public float atmosphereExpansionFactor = 1.02f;
+    [Header("Manual Ocean Control")]
+    [Tooltip("If > 0, overrides automatic ocean radius (world units).")]
+    public float manualOceanRadius = 0f;
+
+    [Header("Manual Atmosphere Control")]
+    [Tooltip("If > 0, overrides automatic atmosphere radius (world units).")]
+    public float manualAtmosphereRadius = 0f;
+
+    [Header("Automatic Atmosphere Fallback")]
+    [Range(0.5f, 1.5f)]
+    public float atmosphereExpansionFactor = 1.02f;
 
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
@@ -54,7 +64,9 @@ public class PlanetGenerator : MonoBehaviour
     void OnValidate()
     {
         if (terrainSettings && biomeSettings && oceanSettings && atmosphereSettings)
+        {
             GeneratePlanet();
+        }
     }
 
     [ContextMenu("Generate Planet Now")]
@@ -62,23 +74,40 @@ public class PlanetGenerator : MonoBehaviour
     {
         if (!terrainSettings || !biomeSettings || !oceanSettings || !atmosphereSettings)
         {
-            Debug.LogWarning("Missing required settings assets—aborting planet generation.");
+            Debug.LogWarning("Missing required settings assets — aborting planet generation.");
             return;
         }
 
         if (terrainSettings.noiseLayers == null || terrainSettings.noiseLayers.Length == 0)
         {
-            Debug.LogWarning("No noise layers found in TerrainSettings—aborting planet generation.");
+            Debug.LogWarning("No noise layers found in TerrainSettings — aborting planet generation.");
             return;
         }
 
-        mesh = PlanetMeshBuilder.Build(resolution, radius, terrainSettings, out minElevation, out maxElevation);
+        // Build planet mesh
+        mesh = PlanetMeshBuilder.Build(
+            resolution,
+            radius,
+            terrainSettings,
+            out minElevation,
+            out maxElevation
+        );
+
         meshFilter.sharedMesh = mesh;
         meshCollider.sharedMesh = mesh;
 
+        // Generate biome texture
         biomeTexture = BiomeGenerator.GenerateBiomeTexture(biomeSettings);
 
-        PlanetVisualUpdater.ApplyMaterialProperties(meshRenderer.sharedMaterial, radius, minElevation, maxElevation, transform.position, biomeTexture);
+        // Apply material properties
+        PlanetVisualUpdater.ApplyMaterialProperties(
+            meshRenderer.sharedMaterial,
+            radius,
+            minElevation,
+            maxElevation,
+            transform.position,
+            biomeTexture
+        );
 
         AlignChildObjects();
         GenerateOceanPlane();
@@ -106,7 +135,8 @@ public class PlanetGenerator : MonoBehaviour
             ref oceanGameObject,
             ref oceanMeshFilter,
             ref oceanMeshRenderer,
-            ref oceanMesh
+            ref oceanMesh,
+            manualOceanRadius
         );
     }
 
@@ -123,16 +153,20 @@ public class PlanetGenerator : MonoBehaviour
             ref atmosphereMeshFilter,
             ref atmosphereMeshRenderer,
             ref atmosphereMesh,
-            ref atmosphereController
+            ref atmosphereController,
+            manualAtmosphereRadius
         );
-
-        Debug.Log($"Atmosphere Transform - Position: {atmosphereGameObject.transform.position}, Rotation: {atmosphereGameObject.transform.rotation.eulerAngles}, Scale: {atmosphereGameObject.transform.localScale}");
     }
 
     void OnDestroy()
     {
-        if (biomeTexture != null) DestroyImmediate(biomeTexture);
-        if (oceanGameObject != null) DestroyImmediate(oceanGameObject);
-        if (atmosphereGameObject != null) DestroyImmediate(atmosphereGameObject);
+        if (biomeTexture != null)
+            DestroyImmediate(biomeTexture);
+
+        if (oceanGameObject != null)
+            DestroyImmediate(oceanGameObject);
+
+        if (atmosphereGameObject != null)
+            DestroyImmediate(atmosphereGameObject);
     }
 }

@@ -15,7 +15,9 @@ namespace MakoJBryant.SolarSystem.Generation
             ref MeshFilter atmosphereMeshFilter,
             ref MeshRenderer atmosphereMeshRenderer,
             ref Mesh atmosphereMesh,
-            ref AtmosphereController atmosphereController)
+            ref AtmosphereController atmosphereController,
+            float manualAtmosphereRadius = 0f // NEW
+        )
         {
             // Remove stray copies
             for (int i = parent.childCount - 1; i >= 0; i--)
@@ -35,20 +37,37 @@ namespace MakoJBryant.SolarSystem.Generation
                 atmosphereMeshFilter = atmosphereGO.AddComponent<MeshFilter>();
                 atmosphereMeshRenderer = atmosphereGO.AddComponent<MeshRenderer>();
                 atmosphereController = atmosphereGO.AddComponent<AtmosphereController>();
+
                 atmosphereMesh = new Mesh { name = "Generated Atmosphere Mesh" };
                 atmosphereMeshFilter.sharedMesh = atmosphereMesh;
             }
 
             atmosphereMesh.Clear();
-            float atmosphereRadius = maxElevation * expansionFactor;
 
-            SphereCreator.CreateSphereMesh(resolution, atmosphereRadius, out Vector3[] v, out int[] t, out Vector2[] uv);
+            // FIX: manual override OR fallback
+            float atmosphereRadius =
+                manualAtmosphereRadius > 0f
+                    ? manualAtmosphereRadius
+                    : maxElevation * expansionFactor;
 
-            atmosphereMesh.vertices = v;
-            atmosphereMesh.triangles = t;
+            SphereCreator.CreateSphereMesh(
+                resolution,
+                atmosphereRadius,
+                out Vector3[] vertices,
+                out int[] triangles,
+                out Vector2[] uv
+            );
+
+            atmosphereMesh.vertices = vertices;
+            atmosphereMesh.triangles = triangles;
             atmosphereMesh.uv = uv;
             atmosphereMesh.RecalculateNormals();
             atmosphereMesh.RecalculateBounds();
+
+            // Reset transform (IMPORTANT)
+            atmosphereGO.transform.localPosition = Vector3.zero;
+            atmosphereGO.transform.localRotation = Quaternion.identity;
+            atmosphereGO.transform.localScale = Vector3.one;
 
             // Apply settings
             if (atmosphereMeshRenderer != null && atmosphereSettings.atmosphereMaterial != null)
