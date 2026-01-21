@@ -4,17 +4,43 @@ using UnityEngine;
 public class AtmosphereSunController : MonoBehaviour
 {
     [Header("References")]
-    public Light sunLight;                 // Assign your directional sun light
-    public Renderer atmosphereRenderer;    // Assign the Atmosphere MeshRenderer
-    public string sunDirectionProperty = "_SunDirection"; // Shader property name
+    [Tooltip("Directional Light used as the sun")]
+    public Light sunLight;
+
+    [Tooltip("Renderer on the atmosphere sphere")]
+    public Renderer atmosphereRenderer;
+
+    [Header("Shader Properties")]
+    public string sunDirectionProperty = "_SunDirection";
+    public string planetCenterProperty = "_PlanetCenter";
+
+    private MaterialPropertyBlock propertyBlock;
+
+    void OnEnable()
+    {
+        if (propertyBlock == null)
+            propertyBlock = new MaterialPropertyBlock();
+    }
 
     void Update()
     {
-        if (sunLight == null || atmosphereRenderer == null || atmosphereRenderer.sharedMaterial == null)
+        if (sunLight == null || atmosphereRenderer == null)
             return;
 
-        // Pass sun direction to shader (world space)
-        Vector3 sunDir = sunLight.transform.forward;
-        atmosphereRenderer.sharedMaterial.SetVector(sunDirectionProperty, sunDir);
+        if (propertyBlock == null)
+            propertyBlock = new MaterialPropertyBlock();
+
+        // --- Calculate sun direction correctly (from planet center to sun) ---
+        // For directional lights, invert forward
+        Vector3 sunDir = -sunLight.transform.forward.normalized;
+
+        // --- Planet center ---
+        Vector3 planetCenter = transform.parent != null ? transform.parent.position : Vector3.zero;
+
+        // --- Apply to shader ---
+        atmosphereRenderer.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetVector(sunDirectionProperty, sunDir);
+        propertyBlock.SetVector(planetCenterProperty, planetCenter);
+        atmosphereRenderer.SetPropertyBlock(propertyBlock);
     }
 }
