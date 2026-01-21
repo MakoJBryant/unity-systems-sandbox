@@ -12,9 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf447d17f399cff42bec277f3481697d, type: 3}
   m_Name: EarthAtmosphereSettings
   m_EditorClassIdentifier: 
-  atmosphereMaterial: {fileID: 2100000, guid: 03c090273878ec84789691eca3174455, type: 2}
-  atmosphereColor: {r: 0.2, g: 0.4, b: 1, a: 1}
-  density: 1
-  power: 5
-  ambientLightInfluence: 0.1
-  rimPower: 3
+  atmosphereMaterial: {fileID: 0}
+  thicknessMultiplier: 0.3
+  atmosphereColor: {r: 0.4, g: 0.6, b: 1, a: 1}

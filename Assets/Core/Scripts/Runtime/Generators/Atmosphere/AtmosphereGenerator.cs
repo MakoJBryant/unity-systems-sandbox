@@ -5,88 +5,111 @@ namespace MakoJBryant.SolarSystem.Generation
     public static class AtmosphereGenerator
     {
         public static GameObject GenerateAtmosphere(
-            Transform parent,
+            Transform planetTransform,
             int resolution,
+            float planetRadius,
             float maxElevation,
-            float expansionFactor,
-            AtmosphereSettings atmosphereSettings,
+            AtmosphereSettings settings,
             Light sunLight,
             ref GameObject atmosphereGO,
-            ref MeshFilter atmosphereMeshFilter,
-            ref MeshRenderer atmosphereMeshRenderer,
-            ref Mesh atmosphereMesh,
-            ref AtmosphereController atmosphereController,
-            float manualAtmosphereRadius = 0f // NEW
+            ref MeshFilter meshFilter,
+            ref MeshRenderer meshRenderer,
+            ref Mesh mesh,
+            float manualAtmosphereSize = 0f // optional override
         )
         {
-            // Remove stray copies
-            for (int i = parent.childCount - 1; i >= 0; i--)
+            // Destroy duplicates
+            for (int i = planetTransform.childCount - 1; i >= 0; i--)
             {
-                Transform child = parent.GetChild(i);
+                Transform child = planetTransform.GetChild(i);
                 if (child.name == "Atmosphere" && child.gameObject != atmosphereGO)
                 {
                     Object.DestroyImmediate(child.gameObject);
                 }
             }
 
-            // Create atmosphere object if null
+            // Create new atmosphere object if needed
             if (atmosphereGO == null)
             {
-                atmosphereGO = new GameObject("Atmosphere");
-                atmosphereGO.transform.SetParent(parent, false);
-                atmosphereMeshFilter = atmosphereGO.AddComponent<MeshFilter>();
-                atmosphereMeshRenderer = atmosphereGO.AddComponent<MeshRenderer>();
-                atmosphereController = atmosphereGO.AddComponent<AtmosphereController>();
+                Transform existing = planetTransform.Find("Atmosphere");
+                if (existing != null)
+                {
+                    atmosphereGO = existing.gameObject;
+                }
+                else
+                {
+                    atmosphereGO = new GameObject("Atmosphere");
+                    atmosphereGO.transform.SetParent(planetTransform, false);
+                }
 
-                atmosphereMesh = new Mesh { name = "Generated Atmosphere Mesh" };
-                atmosphereMeshFilter.sharedMesh = atmosphereMesh;
+                // Ensure MeshFilter exists
+                meshFilter = atmosphereGO.GetComponent<MeshFilter>();
+                if (meshFilter == null)
+                    meshFilter = atmosphereGO.AddComponent<MeshFilter>();
+
+                // Ensure MeshRenderer exists
+                meshRenderer = atmosphereGO.GetComponent<MeshRenderer>();
+                if (meshRenderer == null)
+                    meshRenderer = atmosphereGO.AddComponent<MeshRenderer>();
             }
 
-            atmosphereMesh.Clear();
+            // Calculate atmosphere radius
+            float atmosphereRadius;
+            if (manualAtmosphereSize > 0f)
+            {
+                atmosphereRadius = manualAtmosphereSize;
+            }
+            else
+            {
+                atmosphereRadius = planetRadius * (1f + settings.thicknessMultiplier) +
+                                   Mathf.Max(0f, maxElevation - planetRadius) * 1.05f;
+            }
 
-            // FIX: manual override OR fallback
-            float atmosphereRadius =
-                manualAtmosphereRadius > 0f
-                    ? manualAtmosphereRadius
-                    : maxElevation * expansionFactor;
+            // Create or clear mesh
+            if (mesh == null)
+            {
+                mesh = new Mesh { name = "Generated Atmosphere Mesh" };
+                meshFilter.sharedMesh = mesh;
+            }
+            else
+            {
+                mesh.Clear();
+                meshFilter.sharedMesh = mesh;
+            }
 
-            SphereCreator.CreateSphereMesh(
-                resolution,
-                atmosphereRadius,
-                out Vector3[] vertices,
-                out int[] triangles,
-                out Vector2[] uv
-            );
+            // Generate sphere mesh
+            SphereCreator.CreateSphereMesh(resolution, atmosphereRadius, out Vector3[] vertices, out int[] triangles, out Vector2[] uv);
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.uv = uv;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
 
-            atmosphereMesh.vertices = vertices;
-            atmosphereMesh.triangles = triangles;
-            atmosphereMesh.uv = uv;
-            atmosphereMesh.RecalculateNormals();
-            atmosphereMesh.RecalculateBounds();
+            // Assign material safely
+            if (settings.atmosphereMaterial != null)
+            {
+                meshRenderer.sharedMaterial = settings.atmosphereMaterial;
+                meshRenderer.sharedMaterial.SetColor("_Color", settings.atmosphereColor);
+            }
 
-            // Reset transform (IMPORTANT)
+            // Disable shadows
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+
+            // Reset transform
             atmosphereGO.transform.localPosition = Vector3.zero;
             atmosphereGO.transform.localRotation = Quaternion.identity;
             atmosphereGO.transform.localScale = Vector3.one;
 
-            // Apply settings
-            if (atmosphereMeshRenderer != null && atmosphereSettings.atmosphereMaterial != null)
-            {
-                atmosphereMeshRenderer.sharedMaterial = atmosphereSettings.atmosphereMaterial;
+            // Add or update sun controller
+            AtmosphereSunController controller = atmosphereGO.GetComponent<AtmosphereSunController>();
+            if (controller == null)
+                controller = atmosphereGO.AddComponent<AtmosphereSunController>();
 
-#if UNITY_2023_1_OR_NEWER
-                if (sunLight == null)
-                    sunLight = Object.FindFirstObjectByType<Light>();
-#else
-                if (sunLight == null)
-                    sunLight = Object.FindObjectOfType<Light>();
-#endif
+            controller.sunLight = sunLight;
+            controller.atmosphereRenderer = meshRenderer;
 
-                atmosphereController.sunLight = sunLight;
-                atmosphereController.atmosphereMaterial = atmosphereSettings.atmosphereMaterial;
-                atmosphereController.atmosphereRadius = atmosphereRadius;
-                atmosphereController.atmosphereSettings = atmosphereSettings;
-            }
+            Debug.Log($"Atmosphere Radius: {atmosphereRadius}, Transform Scale: {atmosphereGO.transform.localScale}");
 
             return atmosphereGO;
         }

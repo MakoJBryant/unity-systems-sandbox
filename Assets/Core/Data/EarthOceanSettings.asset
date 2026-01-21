@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   oceanMaterial: {fileID: 2100000, guid: a138f77458ee8e34c85a873c8c3d370c, type: 2}
   oceanColor: {r: 0, g: 0.2, b: 0.6, a: 1}
-  seaLevel: 0.5
+  seaLevel: 1

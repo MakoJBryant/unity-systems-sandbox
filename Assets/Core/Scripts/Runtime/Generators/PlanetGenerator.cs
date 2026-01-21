@@ -8,7 +8,6 @@ public class PlanetGenerator : MonoBehaviour
 {
     [Range(2, 256)] public int resolution = 64;
     public float radius = 1000f;
-    [Range(0f, 1f)] public float seaLevel = 0.5f;
     public Light sceneSunLight;
 
     [Header("Settings Assets")]
@@ -20,14 +19,6 @@ public class PlanetGenerator : MonoBehaviour
     [Header("Manual Ocean Control")]
     [Tooltip("If > 0, overrides automatic ocean radius (world units).")]
     public float manualOceanRadius = 0f;
-
-    [Header("Manual Atmosphere Control")]
-    [Tooltip("If > 0, overrides automatic atmosphere radius (world units).")]
-    public float manualAtmosphereRadius = 0f;
-
-    [Header("Automatic Atmosphere Fallback")]
-    [Range(0.5f, 1.5f)]
-    public float atmosphereExpansionFactor = 1.02f;
 
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
@@ -43,7 +34,6 @@ public class PlanetGenerator : MonoBehaviour
     private MeshFilter atmosphereMeshFilter;
     private MeshRenderer atmosphereMeshRenderer;
     private Mesh atmosphereMesh;
-    private AtmosphereController atmosphereController;
 
     private float minElevation;
     private float maxElevation;
@@ -55,7 +45,9 @@ public class PlanetGenerator : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
         meshCollider = GetComponent<MeshCollider>();
 
-        mesh = new Mesh { name = "Generated Planet Mesh" };
+        if (mesh == null)
+            mesh = new Mesh { name = "Generated Planet Mesh" };
+
         meshFilter.sharedMesh = mesh;
 
         GeneratePlanet();
@@ -64,42 +56,24 @@ public class PlanetGenerator : MonoBehaviour
     void OnValidate()
     {
         if (terrainSettings && biomeSettings && oceanSettings && atmosphereSettings)
-        {
             GeneratePlanet();
-        }
     }
 
     [ContextMenu("Generate Planet Now")]
     public void GeneratePlanet()
     {
-        if (!terrainSettings || !biomeSettings || !oceanSettings || !atmosphereSettings)
-        {
-            Debug.LogWarning("Missing required settings assets — aborting planet generation.");
-            return;
-        }
+        if (!terrainSettings || !biomeSettings || !oceanSettings || !atmosphereSettings) return;
 
-        if (terrainSettings.noiseLayers == null || terrainSettings.noiseLayers.Length == 0)
-        {
-            Debug.LogWarning("No noise layers found in TerrainSettings — aborting planet generation.");
-            return;
-        }
+        if (terrainSettings.noiseLayers == null || terrainSettings.noiseLayers.Length == 0) return;
 
         // Build planet mesh
-        mesh = PlanetMeshBuilder.Build(
-            resolution,
-            radius,
-            terrainSettings,
-            out minElevation,
-            out maxElevation
-        );
-
+        mesh = PlanetMeshBuilder.Build(resolution, radius, terrainSettings, out minElevation, out maxElevation);
         meshFilter.sharedMesh = mesh;
         meshCollider.sharedMesh = mesh;
 
-        // Generate biome texture
+        // Biome texture
         biomeTexture = BiomeGenerator.GenerateBiomeTexture(biomeSettings);
 
-        // Apply material properties
         PlanetVisualUpdater.ApplyMaterialProperties(
             meshRenderer.sharedMaterial,
             radius,
@@ -111,7 +85,7 @@ public class PlanetGenerator : MonoBehaviour
 
         AlignChildObjects();
         GenerateOceanPlane();
-        GenerateAtmospherePlane();
+        GenerateAtmosphere();
     }
 
     private void AlignChildObjects()
@@ -140,22 +114,28 @@ public class PlanetGenerator : MonoBehaviour
         );
     }
 
-    void GenerateAtmospherePlane()
+    void GenerateAtmosphere()
     {
         atmosphereGameObject = AtmosphereGenerator.GenerateAtmosphere(
             transform,
             resolution,
+            radius,
             maxElevation,
-            atmosphereExpansionFactor,
             atmosphereSettings,
             sceneSunLight,
             ref atmosphereGameObject,
             ref atmosphereMeshFilter,
             ref atmosphereMeshRenderer,
-            ref atmosphereMesh,
-            ref atmosphereController,
-            manualAtmosphereRadius
+            ref atmosphereMesh
         );
+    }
+
+    void Update()
+    {
+        if (Application.isPlaying && atmosphereMeshRenderer != null && atmosphereSettings != null && sceneSunLight != null)
+        {
+            atmosphereMeshRenderer.sharedMaterial.SetVector("_SunDirection", sceneSunLight.transform.forward);
+        }
     }
 
     void OnDestroy()

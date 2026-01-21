@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Layer1
   m_EditorClassIdentifier: 
   enabled: 1
-  strength: 0.2
+  strength: 0.4
   roughness: 1
   octaves: 3
   persistence: 0.5
