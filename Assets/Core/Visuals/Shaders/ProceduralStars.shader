@@ -1,4 +1,4 @@
-Shader "Skybox/ProceduralStars"
+Shader "Skybox/ProceduralStars_Refined"
 {
     Properties
     {
@@ -43,17 +43,15 @@ Shader "Skybox/ProceduralStars"
             {
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
-
-                // Worldspace direction (safe for skybox)
                 o.dir = normalize(mul(unity_ObjectToWorld, v.vertex).xyz);
                 return o;
             }
 
-            // 2D hash (stable)
+            // Better hash (less correlation)
             float hash21(float2 p)
             {
-                p = frac(p * float2(123.34, 456.21));
-                p += dot(p, p + 78.233);
+                p = frac(p * float2(443.897, 441.423));
+                p += dot(p, p + 19.19);
                 return frac(p.x * p.y);
             }
 
@@ -61,22 +59,36 @@ Shader "Skybox/ProceduralStars"
             {
                 float3 d = normalize(i.dir);
 
-                // Convert direction -> spherical UV
+                // Spherical UV
                 float2 uv;
                 uv.x = atan2(d.z, d.x) / (2 * UNITY_PI) + 0.5;
                 uv.y = asin(d.y) / UNITY_PI + 0.5;
 
-                // Star grid
-                float2 cell = floor(uv * _StarDensity);
+                float3 color = _SkyColor.rgb;
 
-                float rnd = hash21(cell);
+                // -------- Layer 1: primary stars --------
+                float2 baseCell = floor(uv * _StarDensity);
 
-                // Star threshold
+                // Jitter sampling inside the cell
+                float2 jitter =
+                    float2(
+                        hash21(baseCell + 1.3),
+                        hash21(baseCell + 7.1)
+                    );
+
+                float rnd = hash21(baseCell + jitter);
+
                 float star = step(1.0 - _StarSize, rnd);
 
-                float3 color =
-                    _SkyColor.rgb +
-                    _StarTint.rgb * star * _StarBrightness;
+                // -------- Layer 2: offset stars (break symmetry) --------
+                float2 offsetCell = floor((uv + 0.37) * (_StarDensity * 0.73));
+                float rnd2 = hash21(offsetCell);
+
+                float star2 = step(1.0 - _StarSize * 0.85, rnd2);
+
+                float stars = star + star2;
+
+                color += stars * _StarBrightness * _StarTint.rgb;
 
                 return float4(color, 1);
             }

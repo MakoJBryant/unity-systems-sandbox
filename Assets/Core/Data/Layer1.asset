@@ -18,7 +18,7 @@ MonoBehaviour:
   octaves: 3
   persistence: 0.5
   lacunarity: 2
-  offset: {x: 0, y: 0, z: 0}
+  offset: {x: 20, y: 10, z: 15}
   minValue: -0.5
   noiseType: 0
   useFirstLayerAsMask: 0
