@@ -135,7 +135,7 @@ Material:
     - _PlanetCenter: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SunColor: {r: 1, g: 1, b: 0.8, a: 1}
-    - _SunDirection: {r: -0.9476118, g: 0, b: -0.31942487, a: 0}
+    - _SunDirection: {r: 0.60282165, g: -0.13079089, b: 0.7870831, a: 0}
     - _SunsetColor: {r: 1, g: 0.5, b: 0.19999996, a: 1}
     - _TopColor: {r: 0.09999997, g: 0.19999996, b: 0.5, a: 1}
     - _ZenithColor: {r: 0.09999997, g: 0.19999996, b: 0.39999998, a: 1}
